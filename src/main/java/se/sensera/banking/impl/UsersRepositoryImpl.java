@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class UsersRepositoryImpl implements UsersRepository {
+
+
+
     @Override
     public Optional<User> getEntityById(String id) {
         return Optional.empty();

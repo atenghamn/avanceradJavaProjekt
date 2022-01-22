@@ -12,6 +12,7 @@ public class UseException extends Exception {
         this.params = params;
     }
 
+
     public Activity getActivity() {
         return activity;
     }
