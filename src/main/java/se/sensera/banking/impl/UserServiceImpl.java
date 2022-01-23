@@ -37,14 +37,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User changeUser(String userId, Consumer<ChangeUser> changeUser) {
+    public User changeUser(String userId, Consumer<ChangeUser> changeUser) throws UseException {
 
         Stream<User> userStream = usersRepository.all();
+
         var user= usersRepository.getEntityById(userId).get();
         changeUser.accept(user);
 
         user.setPersonalIdentificationNumber(userId);
-
 
 
         return usersRepository.save(user);
@@ -53,7 +53,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User inactivateUser(String userId) {
-        return null;
+
+        var user = usersRepository.getEntityById(userId).get();
+        user.setActive(false);
+
+        return usersRepository.save(user);
     }
 
     @Override
@@ -66,26 +70,3 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 }
-
-/*
-* void update_personal_id_success() throws UseException {
-        // Given
-        when(usersRepository.getEntityById(eq(userId))).thenReturn(Optional.of(user));
-        when(usersRepository.save(any())).then(invocation -> invocation.getArguments()[0]);
-        when(usersRepository.all()).thenReturn(Stream.empty());
-
-        // when
-        userService.changeUser(userId, changeUser -> {
-            try {
-                changeUser.setPersonalIdentificationNumber("20011010-0234");
-            } catch (UseException e) {
-                throw new RuntimeException("Test failed", e);
-            }
-        });
-
-        // Then
-        verify(usersRepository).save(user);
-        verify(user).setPersonalIdentificationNumber("20011010-0234");
-        verify(user, never()).setName(anyString());
-    }
-* */
