@@ -27,9 +27,9 @@ public class UserServiceImpl implements UserService {
 
         UserImpl user = new UserImpl(UUID.randomUUID().toString(), name, personalIdentificationNumber, true);
 
-        boolean dublett = userStream
+        boolean notUnique = userStream
                 .anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
-        if (dublett) {
+        if (notUnique) {
             throw new UseException(Activity.CREATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
         } else {
             return usersRepository.save(user);
@@ -39,8 +39,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User changeUser(String userId, Consumer<ChangeUser> changeUser) {
 
-        
-        return null;
+        var user= usersRepository.getEntityById(userId).get();
+        //user.setName("Arne Andersson");
+        changeUser.accept(user);
+        return usersRepository.save(user);
+
     }
 
     @Override
