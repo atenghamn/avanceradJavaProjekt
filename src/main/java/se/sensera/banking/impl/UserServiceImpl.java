@@ -1,5 +1,6 @@
 package se.sensera.banking.impl;
 
+import jdk.jshell.spi.ExecutionControl;
 import se.sensera.banking.User;
 import se.sensera.banking.UserService;
 import se.sensera.banking.UsersRepository;
@@ -39,20 +40,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public User changeUser(String userId, Consumer<ChangeUser> changeUser) throws UseException {
 
-        Stream<User> userStream = usersRepository.all();
+        User user= usersRepository.getEntityById(userId)
+                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
 
-        var user= usersRepository.getEntityById(userId).get();
-        changeUser.accept(user);
+        changeUser.accept(new ChangeUser() {
+            @Override
+            public void setName(String name) {
+                user.setName(name);
+            }
 
-        user.setPersonalIdentificationNumber(userId);
+            @Override
+            public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
+            user.setPersonalIdentificationNumber(personalIdentificationNumber);
 
-
-        return usersRepository.save(user);
-
+            }
+        });
+            return usersRepository.save(user);
     }
 
     @Override
-    public User inactivateUser(String userId) {
+    public User inactivateUser(String userId) throws UseException {
 
         var user = usersRepository.getEntityById(userId).get();
         user.setActive(false);
@@ -62,6 +69,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> getUser(String userId) {
+
+
         return Optional.empty();
     }
 
