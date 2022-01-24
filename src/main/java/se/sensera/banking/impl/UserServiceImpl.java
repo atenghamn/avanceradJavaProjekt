@@ -51,7 +51,14 @@ public class UserServiceImpl implements UserService {
 
             @Override
             public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
-            user.setPersonalIdentificationNumber(personalIdentificationNumber);
+
+                if(usersRepository.all()
+                        .noneMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), personalIdentificationNumber))){
+                    user.setPersonalIdentificationNumber(personalIdentificationNumber);
+                } else {
+                    throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+                }
+
 
             }
         });
@@ -61,7 +68,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public User inactivateUser(String userId) throws UseException {
 
-        var user = usersRepository.getEntityById(userId).get();
+        var user = usersRepository.getEntityById(userId)
+                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND)) ;
+
         user.setActive(false);
 
         return usersRepository.save(user);
@@ -69,6 +78,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> getUser(String userId) {
+
 
 
         return Optional.empty();
