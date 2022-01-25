@@ -11,6 +11,7 @@ import se.sensera.banking.exceptions.UseExceptionType;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,8 +90,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
 
+        if (Objects.equals(sortOrder.toString(), "Name")) {
+            return usersRepository.all()
+                    .filter(x -> x.getName().toLowerCase().contains(searchString))
+                    .sorted(Comparator.comparing(User::getName));
+        } else if (Objects.equals(sortOrder.toString(), "PersonalId")) {
+            return usersRepository.all()
+                    .filter(x -> x.getName().toLowerCase().contains(searchString))
+                    .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
+        } else {
+            return usersRepository.all()
+                    .filter(x -> x.getName().toLowerCase().contains(searchString));
+        }
 
-        return usersRepository.all()
-                .filter(x -> x.getName().toLowerCase().contains(searchString));
+
     }
 }
