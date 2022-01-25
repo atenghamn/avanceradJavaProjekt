@@ -21,6 +21,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(String name, String personalIdentificationNumber) throws UseException {
         UserImpl user = new UserImpl(UUID.randomUUID().toString(), name, personalIdentificationNumber, true);
+
+        Stream<User> userStream = usersRepository.all();
+
         return usersRepository.save(user);
     }
 
