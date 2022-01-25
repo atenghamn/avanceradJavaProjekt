@@ -1,10 +1,12 @@
 package se.sensera.banking;
 
-import org.junit.jupiter.api.BeforeEach;
+import
+        org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
+import se.sensera.banking.impl.UserServiceImpl;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +32,8 @@ public class UserServiceTest {
         //TODO Måste skickas med som en parameter i UserService constructor
         usersRepository = mock(UsersRepository.class);
 
-        userService = null; //TODO create Your implementing class here
+        userService = new UserServiceImpl(usersRepository);; //TODO create Your implementing class here
+
 
         userId = UUID.randomUUID().toString();
         user = mock(User.class);
@@ -165,9 +168,12 @@ public class UserServiceTest {
     void get_user_by_id_success() {
         // Given
         when(usersRepository.getEntityById(eq(userId))).thenReturn(Optional.of(user));
+        //När du går in i fejkdatabas (userrep) hämtar objekt baserat på id?
+        //returnerar en optional av user
 
         // when
         Optional<User> userOptional = userService.getUser(userId);
+        // Lista userOptional inhl users. Vad e userService?
 
         // Then
         assertThat(userOptional.isPresent(), is(true));
