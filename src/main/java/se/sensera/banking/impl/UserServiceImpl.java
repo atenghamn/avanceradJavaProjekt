@@ -8,10 +8,10 @@ import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UserServiceImpl implements UserService {
@@ -47,22 +47,23 @@ public class UserServiceImpl implements UserService {
             @Override
             public void setName(String name) {
                 user.setName(name);
+                usersRepository.save(user);
             }
 
             @Override
             public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
-
-                if(usersRepository.all()
-                        .noneMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), personalIdentificationNumber))){
-                    user.setPersonalIdentificationNumber(personalIdentificationNumber);
-                } else {
+                boolean isNotUnique = usersRepository.all()
+                                .anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
+                if(isNotUnique){
                     throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+                } else {
+                    user.setPersonalIdentificationNumber(personalIdentificationNumber);
+                    usersRepository.save(user);
                 }
-
-
             }
         });
-            return usersRepository.save(user);
+
+        return user;
     }
 
     @Override
@@ -79,13 +80,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> getUser(String userId) {
 
+        return usersRepository.getEntityById(userId)
+                .filter(x -> Objects.equals(x.getId(), userId));
 
 
-        return Optional.empty();
     }
 
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
-        return null;
+
+
+        return usersRepository.all()
+                .filter(x -> x.getName().toLowerCase().contains(searchString));
     }
 }
