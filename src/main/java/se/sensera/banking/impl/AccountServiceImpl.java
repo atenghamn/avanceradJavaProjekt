@@ -47,27 +47,26 @@ public class AccountServiceImpl implements AccountService {
     public Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException {
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
 
-        changeAccountConsumer.accept(name -> {
-            if (Objects.equals(name, account.getName())){
-                System.out.println("E du dum eller..?");
+        // Testa att byta ut mot lambda sen
+        changeAccountConsumer.accept(new ChangeAccount() {
+            @Override
+            public void setName(String name) throws UseException {
+                if (Objects.equals(name, account.getName())) {
+                    System.out.println("E du dum eller..?");
+                } else if (accountsRepository.all()
+                        .anyMatch(x -> Objects.equals(x.getName(), name))) {
+                    throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
+                } else if (!Objects.equals(userId, account.getOwner().getId())) {
+                    throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+                } else if (!account.isActive()) {
+                    throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NOT_ACTIVE);
+                } else {
+                    account.setName(name);
+                    accountsRepository.save(account);
+                }
             }
-            else if (accountsRepository.all()
-                    .anyMatch(x -> Objects.equals(x.getName(), name))){
-                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
-            }
-            else if (!Objects.equals(userId, account.getOwner().getId())){
-                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
-            }
-            else if (!account.isActive()){
-                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NOT_ACTIVE);
-            }
-            else {
-                account.setName(name);
-                accountsRepository.save(account);
-            }
-
-
         });
+
 
         return account;
     }
@@ -104,6 +103,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) throws UseException {
-        return null;
+        return accountsRepository.all();
     }
 }
