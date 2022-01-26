@@ -91,20 +91,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
 
-        if (searchString.equals("")) {
+        if (pageNumber != null && pageNumber >= 2) {
             return Stream.empty();
+        } else if (searchString.equals("")) {
+            if (SortOrder.Name.equals(sortOrder)) {
+                return usersRepository.all()
+                        .sorted(Comparator.comparing(User::getName));
+            } else if (SortOrder.PersonalId.equals(sortOrder)) {
+                return usersRepository.all()
+                        .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
+            }
+            return usersRepository.all()
+                    .filter(User::isActive);
+
+        } else {
+            return usersRepository.all()
+                    .filter(x -> x.getName().toLowerCase().contains(searchString));
         }
-        if (pageNumber > 1){
-            return Stream.empty();
-        }
-        usersRepository.all()
-                .filter(x -> x.isActive())
-                .collect(Collectors.toList());
 
 
-        return usersRepository.all()
-                .filter(x -> x.getName().toLowerCase().contains(searchString))
-                .sorted(Comparator.comparing(User::getName))
-                .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
     }
 }
