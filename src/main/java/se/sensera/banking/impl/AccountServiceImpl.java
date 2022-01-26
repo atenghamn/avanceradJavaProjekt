@@ -1,10 +1,12 @@
 package se.sensera.banking.impl;
 
+import jdk.jshell.spi.ExecutionControl;
 import se.sensera.banking.*;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
+import javax.print.attribute.UnmodifiableSetException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,7 +45,31 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException {
-        return null;
+        Account account = accountsRepository.getEntityById(accountId).orElseThrow();
+
+        changeAccountConsumer.accept(name -> {
+            if (Objects.equals(name, account.getName())){
+                System.out.println("E du dum eller..?");
+            }
+            else if (accountsRepository.all()
+                    .anyMatch(x -> Objects.equals(x.getName(), name))){
+                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
+            }
+            else if (!Objects.equals(userId, account.getOwner().getId())){
+                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+            }
+            else if (!account.isActive()){
+                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NOT_ACTIVE);
+            }
+            else {
+                account.setName(name);
+                accountsRepository.save(account);
+            }
+
+
+        });
+
+        return account;
     }
 
     @Override
@@ -58,7 +84,22 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account inactivateAccount(String userId, String accountId) throws UseException {
-        return null;
+        User user = usersRepository.getEntityById(userId).orElseThrow(() -> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.USER_NOT_FOUND));
+        Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_FOUND));
+
+        if(!Objects.equals(user.getId(), account.getOwner().getId())){
+            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+        }
+        else if (!account.isActive()){
+            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
+        }
+        else if (!user.isActive()) {
+            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
+        }
+        else {
+            account.setActive(false);
+        }
+        return accountsRepository.save(account);
     }
 
     @Override
