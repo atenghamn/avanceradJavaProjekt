@@ -1,6 +1,5 @@
 package se.sensera.banking.impl;
 
-import jdk.jshell.spi.ExecutionControl;
 import se.sensera.banking.User;
 import se.sensera.banking.UserService;
 import se.sensera.banking.UsersRepository;
@@ -8,10 +7,11 @@ import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UserServiceImpl implements UserService {
@@ -44,32 +44,67 @@ public class UserServiceImpl implements UserService {
         changeUser.accept(new ChangeUser() {
             @Override
             public void setName(String name) {
-               user.setName(name);
-
+                user.setName(name);
+                usersRepository.save(user);
             }
+
             @Override
             public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
-                user.setPersonalIdentificationNumber(personalIdentificationNumber);
+                boolean persIdNotUnique = usersRepository.all()
+                        .anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
+
+                if (persIdNotUnique) {
+                    throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+
+                } else {
+                    user.setPersonalIdentificationNumber(personalIdentificationNumber);
+
+                    usersRepository.save(user);
+                }
 
             }
         });
-        return usersRepository.save(user);
+        return user;
+
     }
 
     @Override
     public User inactivateUser(String userId) throws UseException {
-        return null;
+        // Hämta en användare
+        User user = usersRepository.getEntityById((userId))
+                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
+        // Sätt isActive(false)
+        user.setActive(false);
+        // Returnera användaren
+
+        // Gör en segerpull!
+        return usersRepository.save(user);
     }
 
     @Override
-    public Optional<User> getUser(String userId) { // Tar emot ett user Id från test rad 175
-        return usersRepository.getEntityById(userId); // går in i "databasen och anropar metoden entitybyid
-
+    public Optional<User> getUser(String userId) {
+        return usersRepository.getEntityById(userId)
+                .filter(x -> Objects.equals(x.getId(), userId));
 
     }
 
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
-        return null;
+
+        if (searchString.equals("")) {
+            return Stream.empty();
+        }
+        if (pageNumber > 1){
+            return Stream.empty();
+        }
+        usersRepository.all()
+                .filter(x -> x.isActive())
+                .collect(Collectors.toList());
+
+
+        return usersRepository.all()
+                .filter(x -> x.getName().toLowerCase().contains(searchString))
+                .sorted(Comparator.comparing(User::getName))
+                .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
     }
 }
