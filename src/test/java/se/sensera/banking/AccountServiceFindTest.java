@@ -146,7 +146,7 @@ public class AccountServiceFindTest {
         when(account.getName()).thenReturn(name);
         when(account.getOwner()).thenReturn(owner);
         when(account.isActive()).thenReturn(active);
-        when(account.getUsers()).thenReturn(Stream.of(users));
+        when(account.getUserList()).thenReturn(Stream.of(users));
         when(account.toString()).thenReturn(name);
         return account;
     }

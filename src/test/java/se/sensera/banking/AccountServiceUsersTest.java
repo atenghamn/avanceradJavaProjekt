@@ -60,7 +60,7 @@ public class AccountServiceUsersTest {
         when(account.getName()).thenReturn(accountName);
         when(account.getOwner()).thenReturn(user);
         when(account.isActive()).thenReturn(true);
-        when(account.getUsers()).then(invocation -> Stream.empty());
+        when(account.getUserList()).then(invocation -> Stream.empty());
         when(accountsRepository.getEntityById(eq(accountId))).thenReturn(Optional.of(account));
         when(accountsRepository.all()).thenReturn(Stream.of(account));
     }
@@ -148,7 +148,7 @@ public class AccountServiceUsersTest {
     @Test
     void add_user_to_account_failed_because_user_already_assigned_to_account() throws UseException {
         // Given
-        when(account.getUsers()).then(invocation -> Stream.of(otherUser));
+        when(account.getUserList()).then(invocation -> Stream.of(otherUser));
 
         // When
         UseException userException = assertThrows(UseException.class, () -> {
@@ -165,7 +165,7 @@ public class AccountServiceUsersTest {
     @Test
     void remove_user_from_account_success() throws UseException {
         // Given
-        when(account.getUsers()).thenReturn(Stream.of(otherUser));
+        when(account.getUserList()).thenReturn(Stream.of(otherUser));
 
         // When
         accountService.removeUserFromAccount(userId, account.getId(), otherUserId);
@@ -182,7 +182,7 @@ public class AccountServiceUsersTest {
         User extraUser = mock(User.class);
         when(extraUser.getId()).thenReturn(extraUserId);
         when(extraUser.isActive()).thenReturn(true);
-        when(account.getUsers()).thenReturn(Stream.of(otherUser));
+        when(account.getUserList()).thenReturn(Stream.of(otherUser));
         when(usersRepository.getEntityById(eq(extraUserId))).thenReturn(Optional.of(extraUser));
 
         // When

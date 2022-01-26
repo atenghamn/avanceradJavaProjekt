@@ -163,7 +163,7 @@ public class TransactionServiceParallelTest {
         when(account.getName()).thenReturn(name);
         when(account.getOwner()).thenReturn(owner);
         when(account.isActive()).thenReturn(active);
-        when(account.getUsers()).then(invocation -> Stream.of(users));
+        when(account.getUserList()).then(invocation -> Stream.of(users));
         //when(accountsRepository.getEntityById(accountId)).thenReturn(Optional.of(account));
         accountsRepository.save(account);
         return account;

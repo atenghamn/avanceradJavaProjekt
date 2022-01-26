@@ -11,7 +11,7 @@ public interface Account extends Repository.Entity<String> {
     boolean isActive();
     void setActive(boolean active);
 
-    Stream<User> getUsers();
+    Stream<User> getUserList();
     void addUser(User user);
     void removeUser(User user);
 

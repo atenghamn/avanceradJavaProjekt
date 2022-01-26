@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
+import se.sensera.banking.impl.AccountServiceImpl;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -41,7 +42,7 @@ public class AccountServiceTest {
         usersRepository = mock(UsersRepository.class);
         accountsRepository = mock(AccountsRepository.class);
 
-        accountService = null; //TODO create Your implementing class here
+        accountService = new AccountServiceImpl(usersRepository, accountsRepository); //TODO create Your implementing class here
 
         user = mock(User.class);
         userId = UUID.randomUUID().toString();
@@ -62,7 +63,7 @@ public class AccountServiceTest {
         when(account.getName()).thenReturn(accountName);
         when(account.getOwner()).thenReturn(user);
         when(account.isActive()).thenReturn(true);
-        when(account.getUsers()).thenReturn(Stream.empty());
+        when(account.getUserList()).thenReturn(Stream.empty());
         when(accountsRepository.getEntityById(anyString())).thenReturn(Optional.empty());
         when(accountsRepository.all()).thenReturn(Stream.empty());
     }
@@ -82,7 +83,7 @@ public class AccountServiceTest {
         assertThat(account.getOwner().getId(), is(userId));
         assertThat(account.getName(), is(accountName));
         assertThat(account.isActive(), is(true));
-        assertThat(account.getUsers().collect(Collectors.toList()), is(empty()));
+        assertThat(account.getUserList().collect(Collectors.toList()), is(empty()));
     }
 
     @Test
@@ -141,7 +142,7 @@ public class AccountServiceTest {
         assertThat(account.getOwner().getId(), is(userId));
         assertThat(account.getName(), is(accountName));
         assertThat(account.isActive(), is(true));
-        assertThat(account.getUsers().collect(Collectors.toList()), is(empty()));
+        assertThat(account.getUserList().collect(Collectors.toList()), is(empty()));
     }
 
     @Test
