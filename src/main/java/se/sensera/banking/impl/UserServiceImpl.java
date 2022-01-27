@@ -79,11 +79,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> getUser(String userId) {
-
         return usersRepository.getEntityById(userId)
                 .filter(x -> Objects.equals(x.getId(), userId));
-
-
     }
 
     @Override
