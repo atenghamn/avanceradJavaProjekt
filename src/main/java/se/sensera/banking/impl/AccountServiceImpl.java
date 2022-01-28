@@ -1,13 +1,11 @@
 package se.sensera.banking.impl;
 
-import jdk.jshell.spi.ExecutionControl;
 import se.sensera.banking.*;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 import se.sensera.banking.utils.ListUtils;
 
-import javax.print.attribute.UnmodifiableSetException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -125,13 +123,10 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) throws UseException {
-
-       if (Objects.equals(searchValue, "") && userId==null && pageNumber == null && pageSize == null && sortOrder.toString().equals("None")){
-           return accountsRepository.all();
-       }  else  if (!searchValue.equals("")) {
+     if (!searchValue.equals("")) {
             return accountsRepository.all()
                     .filter(x -> x.getName().toLowerCase().contains(searchValue));
-        } else if (sortOrder.toString().toLowerCase(Locale.ROOT).equals("accountname")) {
+        } else if (sortOrder.toString().toLowerCase(Locale.ROOT).equals("accountname") && pageSize == null) {
             return accountsRepository.all()
                     .sorted(Comparator.comparing(Account::getName));
         } else if (userId != null) {
@@ -139,51 +134,23 @@ public class AccountServiceImpl implements AccountService {
             List<Account> accountList = accountsRepository.all().collect(Collectors.toList());
 
             for (Account account : accountList) {
-                if (Objects.equals(account.getOwner().getId(), userId)){
+                if (Objects.equals(account.getOwner().getId(), userId)) {
                     usersAssociatedAccounts.add(account);
                 }
                 List<User> userList = account.getUserList().collect(Collectors.toList());
-                if (!userList.isEmpty()){
-                    for(User user : userList){
-                        if(Objects.equals(user.getId(), userId)){
+                if (!userList.isEmpty()) {
+                    for (User user : userList) {
+                        if (Objects.equals(user.getId(), userId)) {
                             usersAssociatedAccounts.add(account);
                         }
                     }
                 }
             }
             return usersAssociatedAccounts.stream();
-
+        } else if (pageSize != null) {
+         return ListUtils.applyPage(accountsRepository.all().sorted(Comparator.comparing(Account::getName)), pageNumber, pageSize);
         }
-        else if(pageNumber >= 1){
-           return Stream.empty();
-        }
-            return accountsRepository.all();
-        }
-
+        return accountsRepository.all();
     }
 
-
-
-
-
-/*
-*
-        if (Objects.equals(sortOrder.toString(), "Name")) {
-                return usersRepository.all()
-                        .filter(User::isActive)
-                        .filter(x -> x.getName().toLowerCase().contains(searchString))
-                        .sorted(Comparator.comparing(User::getName));
-        } else if (Objects.equals(sortOrder.toString(), "PersonalId")) {
-            return usersRepository.all()
-                    .filter(User::isActive)
-                    .filter(x -> x.getName().toLowerCase().contains(searchString))
-                    .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
-        } else {
-            if(pageNumber != null && pageNumber >= 2){
-                return Stream.empty();
-            }
-            return usersRepository.all()
-                    .filter(User::isActive)
-                    .filter(x -> x.getName().toLowerCase().contains(searchString));
-*
-* */
+}
