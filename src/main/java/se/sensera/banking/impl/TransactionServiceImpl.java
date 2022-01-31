@@ -60,13 +60,10 @@ public class TransactionServiceImpl implements TransactionService {
         }
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
-
-        System.out.println(created);
         try {
             Date date = dateFormatter.parse(created);
             return transactionsRepository.all()
                     .filter(x -> Objects.equals(x.getAccount().getId(), accountId))
-                    .filter(x -> x.getUser().getId().equals(userId) || account.getUserList().anyMatch())
                     .filter(x -> x.getCreated().before(date))
                     .mapToDouble(Transaction::getAmount).sum();
         } catch (ParseException e) {
