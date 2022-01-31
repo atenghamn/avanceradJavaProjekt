@@ -44,6 +44,14 @@ public class AccountServiceImpl implements AccountService {
     public Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException {
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
 
+        if (!account.getOwner().getId().equals(userId)){
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+
+        }
+        if (!account.isActive()) {
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
+        }
+
         changeAccountConsumer.accept(name -> {
             if (Objects.equals(name, account.getName())) {
                 System.out.println("E du dum eller..?");

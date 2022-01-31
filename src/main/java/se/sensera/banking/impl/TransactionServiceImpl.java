@@ -29,11 +29,6 @@ public class TransactionServiceImpl implements TransactionService {
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
-        System.out.println(account.getOwner().getId());
-        System.out.println(account.getOwner().getName());
-        System.out.println(userId);
-        System.out.println(user.getName());
-
         double sum = transactionsRepository.all()
                 .filter(x -> Objects.equals(x.getAccount().getId(), accountId)).mapToDouble(Transaction::getAmount).sum();
 
@@ -58,13 +53,28 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public double sum(String created, String userId, String accountId) throws UseException {
 
+        Account account = accountsRepository.getEntityById(accountId).orElseThrow();
 
-      double d =   transactionsRepository.all()
-                .filter(x -> Objects.equals(x.getUser().getId(), userId))
-                .filter(x -> Objects.equals(x.getAccount().getId(), accountId)).mapToDouble(Transaction::getAmount).sum();
-        System.out.println(d);
+        if (!Objects.equals(account.getOwner().getId(), userId) &&  account.getUserList().noneMatch(x -> Objects.equals(x.getId(), userId))) {
+            throw new UseException(Activity.SUM_TRANSACTION, UseExceptionType.NOT_ALLOWED);
+        }
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
-        return d;
+
+        System.out.println(created);
+        try {
+            Date date = dateFormatter.parse(created);
+            return transactionsRepository.all()
+                    .filter(x -> Objects.equals(x.getAccount().getId(), accountId))
+                    .filter(x -> x.getUser().getId().equals(userId) || account.getUserList().anyMatch())
+                    .filter(x -> x.getCreated().before(date))
+                    .mapToDouble(Transaction::getAmount).sum();
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+        }
+
+
+    return 0;
 
     }
 
