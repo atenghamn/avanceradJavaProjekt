@@ -70,14 +70,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User inactivateUser(String userId) throws UseException {
-        // Hämta en användare
+
         User user = usersRepository.getEntityById((userId))
                 .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
-        // Sätt isActive(false)
         user.setActive(false);
-        // Returnera användaren
-
-        // Gör en segerpull!
         return usersRepository.save(user);
     }
 

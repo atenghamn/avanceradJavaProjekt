@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="banking" />
         <module name="banking-master" />
+        <module name="avanceradJava" />
       </profile>
     </annotationProcessing>
   </component>
