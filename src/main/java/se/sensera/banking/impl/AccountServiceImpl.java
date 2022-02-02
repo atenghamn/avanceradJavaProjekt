@@ -41,9 +41,15 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException {
 
-        // Hämta rätt account
+
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
 
+        if(!account.getOwner().getId().equals(userId)){
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+        }
+        if (!account.isActive()){
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
+        }
 
         changeAccountConsumer.accept(name -> {
             if(Objects.equals(name, account.getName())){
@@ -74,7 +80,19 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account inactivateAccount(String userId, String accountId) throws UseException {
-        return null;
+        User user = usersRepository.getEntityById(userId)
+                .orElseThrow(()-> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.USER_NOT_FOUND));
+        Account account = accountsRepository.getEntityById(accountId)
+                .orElseThrow(()-> new UseException(Activity.INACTIVATE_ACCOUNT,UseExceptionType.NOT_FOUND));
+        account.setActive(false);
+
+        if(!Objects.equals(user.getId(), account.getOwner().getId())){
+            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+        } else if (!account.isActive() || !user.isActive()){
+            throw  new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
+        }
+
+        return accountsRepository.save(account);
     }
 
     @Override
