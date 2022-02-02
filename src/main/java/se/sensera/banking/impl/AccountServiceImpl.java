@@ -58,10 +58,6 @@ public class AccountServiceImpl implements AccountService {
             } else if (accountsRepository.all()
                     .anyMatch(x -> Objects.equals(x.getName(), name))) {
                 throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
-            } else if (!Objects.equals(userId, account.getOwner().getId())) {
-                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
-            } else if (!account.isActive()) {
-                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NOT_ACTIVE);
             } else {
                 account.setName(name);
                 accountsRepository.save(account);

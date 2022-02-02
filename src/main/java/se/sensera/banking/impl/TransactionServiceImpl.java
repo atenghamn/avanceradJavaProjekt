@@ -16,6 +16,7 @@ public class TransactionServiceImpl implements TransactionService {
     UsersRepository usersRepository;
     AccountsRepository accountsRepository;
     TransactionsRepository transactionsRepository;
+    Consumer<Transaction> monitor;
 
     public TransactionServiceImpl(UsersRepository usersRepository, AccountsRepository accountsRepository, TransactionsRepository transactionsRepository) {
         this.usersRepository = usersRepository;
@@ -32,17 +33,18 @@ public class TransactionServiceImpl implements TransactionService {
         double sum = transactionsRepository.all()
                 .filter(x -> Objects.equals(x.getAccount().getId(), accountId)).mapToDouble(Transaction::getAmount).sum();
 
-        if ((sum + amount) < 0){
+        if ((sum + amount) < 0) {
             throw new UseException(Activity.CREATE_TRANSACTION, UseExceptionType.NOT_FUNDED);
         }
 
-        if (!Objects.equals(account.getOwner().getId(), userId) &&  account.getUserList().noneMatch(x -> Objects.equals(x.getId(), userId))){
-           throw new UseException(Activity.CREATE_TRANSACTION, UseExceptionType.NOT_ALLOWED);
+        if (!Objects.equals(account.getOwner().getId(), userId) && account.getUserList().noneMatch(x -> Objects.equals(x.getId(), userId))) {
+            throw new UseException(Activity.CREATE_TRANSACTION, UseExceptionType.NOT_ALLOWED);
         }
 
         try {
             Date date = dateFormatter.parse(created);
             TransactionImpl transaction = new TransactionImpl(date, user, account, amount);
+            monitor.accept(transaction);
             return transactionsRepository.save(transaction);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
@@ -55,7 +57,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
 
-        if (!Objects.equals(account.getOwner().getId(), userId) &&  account.getUserList().noneMatch(x -> Objects.equals(x.getId(), userId))) {
+        if (!Objects.equals(account.getOwner().getId(), userId) && account.getUserList().noneMatch(x -> Objects.equals(x.getId(), userId))) {
             throw new UseException(Activity.SUM_TRANSACTION, UseExceptionType.NOT_ALLOWED);
         }
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -71,12 +73,12 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
 
-    return 0;
+        return 0;
 
     }
 
     @Override
     public void addMonitor(Consumer<Transaction> monitor) {
-
+        this.monitor = monitor;
     }
 }
