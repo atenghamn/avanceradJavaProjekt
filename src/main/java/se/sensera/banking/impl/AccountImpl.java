@@ -25,7 +25,7 @@ public AccountImpl(String name, User owner, boolean isActive){
 
     @Override
     public String getId() {
-        return this.id;
+        return null;
     }
 
     @Override
@@ -41,7 +41,6 @@ public AccountImpl(String name, User owner, boolean isActive){
     @Override
     public void setName(String name) {
     this.name = name;
-
     }
 
     @Override
@@ -60,11 +59,12 @@ public AccountImpl(String name, User owner, boolean isActive){
 
     @Override
     public void addUser(User user) {
-
+    System.out.println("Steg 2");
+    userList.add(user);
     }
 
     @Override
     public void removeUser(User user) {
-
+    userList.remove(user);
     }
 }
