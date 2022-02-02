@@ -8,6 +8,7 @@ import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,12 +25,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(String name, String personalIdentificationNumber) throws UseException {
+        Stream<User> userStream = usersRepository.all();
+
         UserImpl user = new UserImpl(UUID.randomUUID().toString(), name, personalIdentificationNumber, true);
 
-        boolean isNotUnique = usersRepository.all()
-                .anyMatch(userCompare -> Objects.equals(userCompare.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
-
-        if (isNotUnique) {
+        boolean notUnique = userStream
+                .anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
+        if (notUnique) {
             throw new UseException(Activity.CREATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
         } else {
             return usersRepository.save(user);
@@ -38,36 +40,67 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User changeUser(String userId, Consumer<ChangeUser> changeUser) throws UseException {
-        User user = usersRepository.getEntityById(userId)
+        User user= usersRepository.getEntityById(userId)
                 .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
 
         changeUser.accept(new ChangeUser() {
             @Override
             public void setName(String name) {
-               user.setName(name);
-
+                user.setName(name);
+                usersRepository.save(user);
             }
+
             @Override
             public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
-                user.setPersonalIdentificationNumber(personalIdentificationNumber);
-
+                boolean isNotUnique = usersRepository.all()
+                        .anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
+                if(isNotUnique){
+                    throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+                } else {
+                    user.setPersonalIdentificationNumber(personalIdentificationNumber);
+                    usersRepository.save(user);
+                }
             }
         });
-        return usersRepository.save(user);
+
+        return user;
     }
 
     @Override
     public User inactivateUser(String userId) throws UseException {
-        return null;
+        var user = usersRepository.getEntityById(userId)
+                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND)) ;
+
+        user.setActive(false);
+
+        return usersRepository.save(user);
     }
 
     @Override
     public Optional<User> getUser(String userId) {
-        return Optional.empty();
+        return usersRepository.getEntityById(userId)
+                .filter(x -> Objects.equals(x.getId(), userId));
     }
 
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
-        return null;
+        if (Objects.equals(sortOrder.toString(), "Name")) {
+            return usersRepository.all()
+                    .filter(User::isActive)
+                    .filter(x -> x.getName().toLowerCase().contains(searchString))
+                    .sorted(Comparator.comparing(User::getName));
+        } else if (Objects.equals(sortOrder.toString(), "PersonalId")) {
+            return usersRepository.all()
+                    .filter(User::isActive)
+                    .filter(x -> x.getName().toLowerCase().contains(searchString))
+                    .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
+        } else {
+            if(pageNumber != null && pageNumber >= 2){
+                return Stream.empty();
+            }
+            return usersRepository.all()
+                    .filter(User::isActive)
+                    .filter(x -> x.getName().toLowerCase().contains(searchString));
+        }
     }
 }

@@ -11,6 +11,7 @@ public interface AccountService {
     Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException;
 
     Account addUserToAccount(String userId, String accountId, String userIdToBeAssigned) throws UseException;
+
     Account removeUserFromAccount(String userId, String accountId, String userIdToBeAssigned) throws UseException;
 
     Account inactivateAccount(String userId, String accountId) throws UseException;
