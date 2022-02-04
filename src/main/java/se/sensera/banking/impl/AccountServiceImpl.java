@@ -19,6 +19,7 @@ public class AccountServiceImpl implements AccountService {
 
     UsersRepository usersRepository;
     AccountsRepository accountsRepository;
+    Stream<Account> holder;
 
     public AccountServiceImpl(UsersRepository usersRepository, AccountsRepository accountsRepository) {
         this.usersRepository = usersRepository;
@@ -164,20 +165,33 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) throws UseException {
 
+        holder = accountsRepository.all();
+        finderOne(searchValue, userId, pageSize, sortOrder);
+        finderTwo(userId,pageNumber,pageSize);
+
+
+        return holder;
+
+    }
+
+    private void finderOne(String searchValue, String userId, Integer pageSize, SortOrder sortOrder) {
         if (!searchValue.equals("")) {
-            return accountsRepository.all()
+            holder = accountsRepository.all()
                     .filter(x -> x.getName().toLowerCase().contains(searchValue));
         } else if (sortOrder.toString().toLowerCase().equals("accountname") && pageSize == null) {
-            return accountsRepository.all()
+            holder = accountsRepository.all()
                     .sorted(Comparator.comparing(Account::getName));
-        } else if (userId != null) {
-            return checkForAssociateAccounts(userId);
-
-        } else if (pageSize != null) {
-            return ListUtils.applyPage(accountsRepository.all().sorted(Comparator.comparing(Account::getName)), pageNumber, pageSize);
         }
-        return accountsRepository.all();
     }
+
+        private void finderTwo(String userId, Integer pageNumber, Integer pageSize){
+            if (userId != null) {
+                holder = checkForAssociateAccounts(userId);
+
+            } else if (pageSize != null) {
+                holder = ListUtils.applyPage(accountsRepository.all().sorted(Comparator.comparing(Account::getName)), pageNumber, pageSize);
+            }
+        }
 
     private Stream<Account> checkForAssociateAccounts(String userId) {
         List<Account> usersAssociatedAccounts = new ArrayList<>();
