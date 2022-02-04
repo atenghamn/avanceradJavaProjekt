@@ -88,23 +88,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
-        if (Objects.equals(sortOrder.toString(), "Name")) {
-            return usersRepository.all()
-                    .filter(User::isActive)
-                    .filter(x -> x.getName().toLowerCase().contains(searchString))
-                    .sorted(Comparator.comparing(User::getName));
-        } else if (Objects.equals(sortOrder.toString(), "PersonalId")) {
-            return usersRepository.all()
-                    .filter(User::isActive)
-                    .filter(x -> x.getName().toLowerCase().contains(searchString))
-                    .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
-        } else {
-            if(pageNumber != null && pageNumber >= 2){
-                return Stream.empty();
-            }
-            return usersRepository.all()
-                    .filter(User::isActive)
-                    .filter(x -> x.getName().toLowerCase().contains(searchString));
-        }
+        if (Objects.equals(sortOrder.toString(), "Name")) {return sortByName(searchString);
+        } else if (Objects.equals(sortOrder.toString(), "PersonalId")) {return sortByPID(searchString);
+        } else if (pageNumber != null && pageNumber >= 2) {return Stream.empty();}
+            else {return unSorted(searchString);}}
+
+    private Stream<User> unSorted (String searchString){
+        return usersRepository.all()
+                .filter(User::isActive)
+                .filter(x -> x.getName().toLowerCase().contains(searchString));
+
+    }
+    private Stream<User> sortByName (String searchString){
+        return usersRepository.all()
+                .filter(User::isActive)
+                .filter(x -> x.getName().toLowerCase().contains(searchString))
+                .sorted(Comparator.comparing(User::getName));
+    }
+
+    private Stream<User> sortByPID (String PID){
+        return usersRepository.all()
+                .filter(User::isActive)
+                .filter(x -> x.getName().toLowerCase().contains(PID))
+                .sorted(Comparator.comparing(User::getPersonalIdentificationNumber));
     }
 }
