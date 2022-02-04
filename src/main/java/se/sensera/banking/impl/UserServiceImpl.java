@@ -26,50 +26,54 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(String name, String personalIdentificationNumber) throws UseException {
         Stream<User> userStream = usersRepository.all();
-
         UserImpl user = new UserImpl(UUID.randomUUID().toString(), name, personalIdentificationNumber, true);
+        boolean notUnique = userStream.anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
+        return ifNotUnique(user, notUnique, 1, personalIdentificationNumber);
+    }
 
-        boolean notUnique = userStream
-                .anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
-        if (notUnique) {
-            throw new UseException(Activity.CREATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+    private User ifNotUnique(User user, boolean notUnique, int route, String personalIdentificationNumber) throws UseException {
+        if (notUnique && route ==1) {throw new UseException(Activity.CREATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+        } else if (notUnique && route == 2) {throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
         } else {
+            user.setPersonalIdentificationNumber(personalIdentificationNumber);
             return usersRepository.save(user);
         }
     }
 
     @Override
     public User changeUser(String userId, Consumer<ChangeUser> changeUser) throws UseException {
-        User user= usersRepository.getEntityById(userId)
-                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
+        User user = getUser1(userId);
 
+       giveName(changeUser, user);
+
+        return user;
+    }
+
+    public void giveName (Consumer<ChangeUser> changeUser, User user){
         changeUser.accept(new ChangeUser() {
             @Override
             public void setName(String name) {
                 user.setName(name);
                 usersRepository.save(user);
             }
-
             @Override
             public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
-                boolean isNotUnique = usersRepository.all()
-                        .anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
-                if(isNotUnique){
-                    throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
-                } else {
-                    user.setPersonalIdentificationNumber(personalIdentificationNumber);
-                    usersRepository.save(user);
-                }
-            }
-        });
+                boolean isNotUnique = usersRepository.all().anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
+                ifNotUnique(user, isNotUnique, 2, personalIdentificationNumber);
+                }});
+    }
 
-        return user;
+
+
+
+    private User getUser1(String userId) throws UseException {
+        return usersRepository.getEntityById(userId)
+                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
     }
 
     @Override
     public User inactivateUser(String userId) throws UseException {
-        var user = usersRepository.getEntityById(userId)
-                .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND)) ;
+        User user = getUser1(userId);
 
         user.setActive(false);
 
