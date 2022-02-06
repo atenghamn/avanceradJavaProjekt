@@ -82,3 +82,9 @@ public class TransactionServiceImpl implements TransactionService {
         this.monitor = monitor;
     }
 }
+
+
+// TODO
+/*      Atomic Long, som static som kan summera
+*
+* */
