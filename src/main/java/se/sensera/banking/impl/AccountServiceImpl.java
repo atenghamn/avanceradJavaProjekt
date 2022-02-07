@@ -78,18 +78,7 @@ public class AccountServiceImpl implements AccountService {
         User otherUser = usersRepository.getEntityById(userIdToBeAssigned).orElseThrow();
 
         account = exceptionHandlingFacade.handleAddUserToAccount(account, otherUser, userId, userIdToBeAssigned);
-      /*  if (!account.isActive()) {
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NOT_ACTIVE);
-        } else if (Objects.equals(userId, userIdToBeAssigned)) {
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.CANNOT_ADD_OWNER_AS_USER);
-        } else if (account.getUserList()
-                .anyMatch(x -> Objects.equals(x.getId(), userIdToBeAssigned))) {
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.USER_ALREADY_ASSIGNED_TO_THIS_ACCOUNT);
-        } else if (!Objects.equals(userId, account.getOwner().getId())) {
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
-        } else {
-            account.addUser(otherUser);
-        }*/
+
         return accountsRepository.save(account);
     }
 
@@ -112,15 +101,7 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_FOUND));
         account = exceptionHandlingFacade.handleInactivateAccount(account, user);
 
-        /*  if (!Objects.equals(user.getId(), account.getOwner().getId())) {
-            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_OWNER);
-        } else if (!account.isActive()) {
-            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
-        } else if (!user.isActive()) {
-            throw new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
-        } else {
-            account.setActive(false);
-        }*/
+
         return accountsRepository.save(account);
     }
 
