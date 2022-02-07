@@ -2,13 +2,33 @@ package se.sensera.banking.impl;
 
 import se.sensera.banking.Account;
 import se.sensera.banking.User;
+import se.sensera.banking.UsersRepository;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class ExceptionHandlingFacade {
+
+    public UserImpl handleCreateUser ( UserImpl user, Stream<User> userStream) throws UseException{
+        boolean notUnique = userStream
+                .anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
+        if (notUnique) {
+            throw new UseException(Activity.CREATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+        }
+        return user;
+    }
+
+    public void handlePID(User user,  UsersRepository usersRepository, String personalIdentificationNumber) throws UseException {
+        boolean isNotUnique = usersRepository.all().anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
+        if(isNotUnique) {
+            throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
+        }
+        user.setPersonalIdentificationNumber(personalIdentificationNumber);
+        usersRepository.save(user);
+    }
 
     public Account handleAddUserToAccount (Account account, User otherUser, String userId, String userIdToBeAssigned) throws UseException {
         if (!account.isActive()) {

@@ -101,7 +101,6 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_FOUND));
         account = exceptionHandlingFacade.handleInactivateAccount(account, user);
 
-
         return accountsRepository.save(account);
     }
 
@@ -114,23 +113,8 @@ public class AccountServiceImpl implements AccountService {
             return accountsRepository.all()
                     .sorted(Comparator.comparing(Account::getName));
         } else if (userId != null) {
-            List<Account> usersAssociatedAccounts = new ArrayList<>();
-            List<Account> accountList = accountsRepository.all().collect(Collectors.toList());
-
-            for (Account account : accountList) {
-                if (Objects.equals(account.getOwner().getId(), userId)) {
-                    usersAssociatedAccounts.add(account);
-                }
-                List<User> userList = account.getUserList().collect(Collectors.toList());
-                if (!userList.isEmpty()) {
-                    for (User user : userList) {
-                        if (Objects.equals(user.getId(), userId)) {
-                            usersAssociatedAccounts.add(account);
-                        }
-                    }
-                }
-            }
-            return usersAssociatedAccounts.stream();
+         FindUsersFacade findUsersFacade = new FindUsersFacade();
+         return findUsersFacade.allMatchedAccounts(accountsRepository, usersRepository, userId);
         } else if (pageSize != null) {
          return ListUtils.applyPage(accountsRepository.all().sorted(Comparator.comparing(Account::getName)), pageNumber, pageSize);
         }
