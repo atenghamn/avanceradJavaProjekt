@@ -65,9 +65,7 @@ public class AccountServiceImpl implements AccountService {
                 accountsRepository.save(account);
             }
         });
-
     }
-
 
     private void checkForAccountFailure(Account account, String userId) throws UseException {
         if (!account.getOwner().getId().equals(userId)) {
@@ -169,9 +167,7 @@ public class AccountServiceImpl implements AccountService {
         finderOne(searchValue, userId, pageSize, sortOrder);
         finderTwo(userId,pageNumber,pageSize);
 
-
         return holder;
-
     }
 
     private void finderOne(String searchValue, String userId, Integer pageSize, SortOrder sortOrder) {
