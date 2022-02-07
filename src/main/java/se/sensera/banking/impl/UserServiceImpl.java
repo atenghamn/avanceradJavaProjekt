@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 public class UserServiceImpl implements UserService {
 
+    UserExceptionHandlingFacade userExceptionHandlingFacade = new UserExceptionHandlingFacade();
     private UsersRepository usersRepository;
 
     public UserServiceImpl(UsersRepository usersRepository) {
@@ -28,16 +29,12 @@ public class UserServiceImpl implements UserService {
         Stream<User> userStream = usersRepository.all();
         UserImpl user = new UserImpl(UUID.randomUUID().toString(), name, personalIdentificationNumber, true);
         boolean notUnique = userStream.anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
-        return ifNotUnique(user, notUnique, 1, personalIdentificationNumber);
+        user = userExceptionHandlingFacade.handleCreateUser(user, notUnique, route, personalIdentificationNumber);
+        return user;
     }
 
     private User ifNotUnique(User user, boolean notUnique, int route, String personalIdentificationNumber) throws UseException {
-        if (notUnique && route ==1) {throw new UseException(Activity.CREATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
-        } else if (notUnique && route == 2) {throw new UseException(Activity.UPDATE_USER, UseExceptionType.USER_PERSONAL_ID_NOT_UNIQUE);
-        } else {
-            user.setPersonalIdentificationNumber(personalIdentificationNumber);
-            return usersRepository.save(user);
-        }
+     return user;
     }
 
     @Override
@@ -62,7 +59,6 @@ public class UserServiceImpl implements UserService {
                 ifNotUnique(user, isNotUnique, 2, personalIdentificationNumber);
                 }});
     }
-
 
 
 

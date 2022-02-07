@@ -20,7 +20,7 @@ public class AccountServiceImpl implements AccountService {
     UsersRepository usersRepository;
     AccountsRepository accountsRepository;
     Stream<Account> holder;
-
+    AccountExceptionHandlingFacade accountExceptionHandlingFacade = new AccountExceptionHandlingFacade();
     public AccountServiceImpl(UsersRepository usersRepository, AccountsRepository accountsRepository) {
         this.usersRepository = usersRepository;
         this.accountsRepository = accountsRepository;
@@ -84,11 +84,13 @@ public class AccountServiceImpl implements AccountService {
         checkForAccountFailures(userId, userIdToBeAssigned, account);
         account.addUser(otherUser);
 
+        account = accountExceptionHandlingFacade.handleAddUserToAccount(account,userId, userIdToBeAssigned );
+
         return accountsRepository.save(account);
     }
 
     private void checkForAccountFailures(String userId, String userIdToBeAssigned, Account account) throws UseException {
-        if (!account.isActive()) {
+ /*       if (!account.isActive()) {
             throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NOT_ACTIVE);
         }
         if (Objects.equals(userId, userIdToBeAssigned)) {
@@ -99,7 +101,7 @@ public class AccountServiceImpl implements AccountService {
         }
         if (!Objects.equals(userId, account.getOwner().getId())) {
             throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
-        }
+        }*/
     }
 
     @Override
