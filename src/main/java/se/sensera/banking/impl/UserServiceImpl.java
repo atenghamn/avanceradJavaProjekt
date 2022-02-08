@@ -1,23 +1,19 @@
 package se.sensera.banking.impl;
 
-
 import se.sensera.banking.User;
 import se.sensera.banking.UserService;
 import se.sensera.banking.UsersRepository;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
-
 import java.util.*;
 import java.util.function.Consumer;
-
 import java.util.stream.Stream;
 
 public class UserServiceImpl implements UserService {
 
     private final UsersRepository usersRepository;
     ExceptionHandlingFacade exceptionHandlingFacade;
-
 
     public UserServiceImpl(UsersRepository usersRepository, ExceptionHandlingFacade exceptionHandlingFacade) {
         this.usersRepository = usersRepository;
@@ -54,8 +50,6 @@ public class UserServiceImpl implements UserService {
             }});
     }
 
-
-
     private User getUser1(String userId) throws UseException {
         return usersRepository.getEntityById(userId)
                 .orElseThrow(() -> new UseException(Activity.UPDATE_USER, UseExceptionType.NOT_FOUND));
@@ -74,7 +68,6 @@ public class UserServiceImpl implements UserService {
         return usersRepository.getEntityById(userId)
                 .filter(x -> Objects.equals(x.getId(), userId));
     }
-
 
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {

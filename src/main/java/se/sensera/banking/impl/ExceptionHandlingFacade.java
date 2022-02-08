@@ -4,7 +4,6 @@ import se.sensera.banking.*;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
-
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;;
@@ -110,6 +109,5 @@ public class ExceptionHandlingFacade {
 
         return account;
     }
-
 }
 
