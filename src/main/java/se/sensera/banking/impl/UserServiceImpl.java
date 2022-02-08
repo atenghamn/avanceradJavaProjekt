@@ -1,6 +1,6 @@
 package se.sensera.banking.impl;
 
-import jdk.jshell.spi.ExecutionControl;
+
 import se.sensera.banking.User;
 import se.sensera.banking.UserService;
 import se.sensera.banking.UsersRepository;
@@ -8,40 +8,33 @@ import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
+
 import java.util.stream.Stream;
 
 public class UserServiceImpl implements UserService {
 
-    UserExceptionHandlingFacade userExceptionHandlingFacade = new UserExceptionHandlingFacade();
-    private UsersRepository usersRepository;
+    private final UsersRepository usersRepository;
+
+    ExceptionHandlingFacade exceptionHandlingFacade = new ExceptionHandlingFacade();
 
     public UserServiceImpl(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
 
     @Override
-    public User createUser(String name, String personalIdentificationNumber) throws UseException {
+    public User createUser(final String name, final String personalIdentificationNumber) throws UseException {
         Stream<User> userStream = usersRepository.all();
         UserImpl user = new UserImpl(UUID.randomUUID().toString(), name, personalIdentificationNumber, true);
-        boolean notUnique = userStream.anyMatch(x -> Objects.equals(x.getPersonalIdentificationNumber(), user.getPersonalIdentificationNumber()));
-        user = userExceptionHandlingFacade.handleCreateUser(user, notUnique, route, personalIdentificationNumber);
-        return user;
-    }
-
-    private User ifNotUnique(User user, boolean notUnique, int route, String personalIdentificationNumber) throws UseException {
-     return user;
+        user = exceptionHandlingFacade.handleCreateUser(user, userStream);
+        return usersRepository.save(user);
     }
 
     @Override
     public User changeUser(String userId, Consumer<ChangeUser> changeUser) throws UseException {
         User user = getUser1(userId);
-
-       giveName(changeUser, user);
+        giveName(changeUser, user);
 
         return user;
     }
@@ -55,9 +48,8 @@ public class UserServiceImpl implements UserService {
             }
             @Override
             public void setPersonalIdentificationNumber(String personalIdentificationNumber) throws UseException {
-                boolean isNotUnique = usersRepository.all().anyMatch(x -> x.getPersonalIdentificationNumber().equals(personalIdentificationNumber));
-                ifNotUnique(user, isNotUnique, 2, personalIdentificationNumber);
-                }});
+                exceptionHandlingFacade.handlePID(user, usersRepository, personalIdentificationNumber);
+            }});
     }
 
 
@@ -70,7 +62,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User inactivateUser(String userId) throws UseException {
         User user = getUser1(userId);
-
         user.setActive(false);
 
         return usersRepository.save(user);
@@ -82,12 +73,13 @@ public class UserServiceImpl implements UserService {
                 .filter(x -> Objects.equals(x.getId(), userId));
     }
 
+
     @Override
     public Stream<User> find(String searchString, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
         if (Objects.equals(sortOrder.toString(), "Name")) {return sortByName(searchString);
         } else if (Objects.equals(sortOrder.toString(), "PersonalId")) {return sortByPID(searchString);
         } else if (pageNumber != null && pageNumber >= 2) {return Stream.empty();}
-            else {return unSorted(searchString);}}
+        else {return unSorted(searchString);}}
 
     private Stream<User> unSorted (String searchString){
         return usersRepository.all()
