@@ -5,7 +5,6 @@ import se.sensera.banking.*;
 import java.util.stream.Stream;
 
 
-//Hej alex, jobba jobba jobba! ettan kom, tvåan kom, trean kommer så småningom, SLUT PÅ KONTOT! klapp klapp
 public class FindAccountsFacade {
     // Första metoden hämtar alla konton och lägger dem i variabeln allAccounts
     public Stream<Account> allMatchedAccounts(AccountsRepository accountsRepository, UsersRepository usersRepository, String userId) {

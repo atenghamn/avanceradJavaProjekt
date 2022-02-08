@@ -15,19 +15,22 @@ import java.util.stream.Stream;
 public class AccountServiceImpl implements AccountService {
     UsersRepository usersRepository;
     AccountsRepository accountsRepository;
-    ExceptionHandlingFacade exceptionHandlingFacade = new ExceptionHandlingFacade();
+    ExceptionHandlingFacade exceptionHandlingFacade;
+    FindAccountsFacade findAccountsFacade;
 
 
-    public AccountServiceImpl(UsersRepository usersRepository, AccountsRepository accountsRepository) {
+
+    public AccountServiceImpl(UsersRepository usersRepository, AccountsRepository accountsRepository, ExceptionHandlingFacade exceptionHandlingFacade, FindAccountsFacade findAccountsFacade) {
         this.usersRepository = usersRepository;
         this.accountsRepository = accountsRepository;
+        this.exceptionHandlingFacade = exceptionHandlingFacade;
+        this.findAccountsFacade = findAccountsFacade;
     }
 
     @Override
     public Account createAccount(String userId, String accountName) throws UseException {
 
-        User user = usersRepository.getEntityById(userId)
-                .orElseThrow(() -> new UseException(Activity.CREATE_ACCOUNT, UseExceptionType.USER_NOT_FOUND));
+        User user = getUser(userId);
 
         AccountImpl account = new AccountImpl(accountName, user, true);
 
@@ -36,11 +39,17 @@ public class AccountServiceImpl implements AccountService {
         return accountsRepository.save(account);
     }
 
+    private User getUser(String userId) throws UseException {
+        return usersRepository.getEntityById(userId)
+                .orElseThrow(() -> new UseException(Activity.CREATE_ACCOUNT, UseExceptionType.USER_NOT_FOUND));
+    }
+
     @Override
     public Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException {
-        Account account = accountsRepository.getEntityById(accountId).orElseThrow();
+        Account account = getAccount(accountId);
         account = exceptionHandlingFacade.handleChangeAccount(account, userId);
 
+        // Kolla
         Account finalAccount = account;
         changeAccountConsumer.accept(name -> {
             exceptionHandlingFacade.handleChangeAccountName(name, finalAccount, accountsRepository);
@@ -49,11 +58,15 @@ public class AccountServiceImpl implements AccountService {
         return account;
     }
 
+    private Account getAccount(String accountId) {
+        return accountsRepository.getEntityById(accountId).orElseThrow();
+    }
+
     @Override
     public Account addUserToAccount(String userId, String accountId, String userIdToBeAssigned) throws UseException {
 
         Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_FOUND));
-        User otherUser = usersRepository.getEntityById(userIdToBeAssigned).orElseThrow();
+        User otherUser = getUser(userIdToBeAssigned);
 
         account = exceptionHandlingFacade.handleAddUserToAccount(account, otherUser, userId, userIdToBeAssigned);
 
@@ -104,7 +117,6 @@ public class AccountServiceImpl implements AccountService {
 
     private Stream<Account> finderTwo(String userId, Integer pageNumber, Integer pageSize) {
         if (userId != null) {
-            FindAccountsFacade findAccountsFacade = new FindAccountsFacade();
             return findAccountsFacade.allMatchedAccounts(accountsRepository, usersRepository, userId);
 
         } else if (pageSize != null) {
