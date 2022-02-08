@@ -4,11 +4,9 @@ import se.sensera.banking.*;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
-import se.sensera.banking.utils.ListUtils;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -32,41 +30,20 @@ public class AccountServiceImpl implements AccountService {
 
         AccountImpl account = new AccountImpl(user, accountName, true);
 
-        boolean notUnique = accountsRepository.all()
-                .filter(x -> Objects.equals(x.getOwner().getName(), user.getName()))
-                .anyMatch(x -> Objects.equals(x.getName(), accountName));
+        account = exceptionHandlingFacade.handlecreateAccount(account, accountsRepository, accountName, user);
 
-        if (notUnique) {
-            
-            throw new UseException(Activity.CREATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
-        }
         return accountsRepository.save(account);
     }
 
     @Override
     public Account changeAccount(String userId, String accountId, Consumer<ChangeAccount> changeAccountConsumer) throws UseException {
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
+        account = exceptionHandlingFacade.handleChangeAccount(account, userId);
 
-        if (!account.getOwner().getId().equals(userId)){
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
-
-        }
-        if (!account.isActive()) {
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
-        }
-
+        Account finalAccount = account;
         changeAccountConsumer.accept(name -> {
-            if (Objects.equals(name, account.getName())) {
-                System.out.println("E du dum eller..?");
-            } else if (accountsRepository.all()
-                    .anyMatch(x -> Objects.equals(x.getName(), name))) {
-                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
-            } else {
-                account.setName(name);
-                accountsRepository.save(account);
-            }
+            exceptionHandlingFacade.handleChangeAccountName(name, finalAccount, accountsRepository);
         });
-
 
         return account;
     }
@@ -105,7 +82,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) throws UseException {
+    public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
      if (!searchValue.equals("")) {
             return accountsRepository.all()
                     .filter(x -> x.getName().toLowerCase().contains(searchValue));
@@ -113,10 +90,8 @@ public class AccountServiceImpl implements AccountService {
             return accountsRepository.all()
                     .sorted(Comparator.comparing(Account::getName));
         } else if (userId != null) {
-         FindUsersFacade findUsersFacade = new FindUsersFacade();
-         return findUsersFacade.allMatchedAccounts(accountsRepository, usersRepository, userId);
-        } else if (pageSize != null) {
-         return ListUtils.applyPage(accountsRepository.all().sorted(Comparator.comparing(Account::getName)), pageNumber, pageSize);
+         FindAccountsFacade findAccountsFacade = new FindAccountsFacade();
+         return findAccountsFacade.allMatchedAccounts(accountsRepository, usersRepository, userId);
         }
         return accountsRepository.all();
     }

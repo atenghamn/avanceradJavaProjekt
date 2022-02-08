@@ -1,6 +1,7 @@
 package se.sensera.banking.impl;
 
 import se.sensera.banking.Account;
+import se.sensera.banking.AccountsRepository;
 import se.sensera.banking.User;
 import se.sensera.banking.UsersRepository;
 import se.sensera.banking.exceptions.Activity;
@@ -28,6 +29,43 @@ public class ExceptionHandlingFacade {
         }
         user.setPersonalIdentificationNumber(personalIdentificationNumber);
         usersRepository.save(user);
+    }
+
+    public AccountImpl handlecreateAccount(AccountImpl account, AccountsRepository accountsRepository, String accountName, User user) throws UseException {
+        boolean notUnique = accountsRepository.all()
+                .filter(x -> Objects.equals(x.getOwner().getName(), user.getName()))
+                .anyMatch(x -> Objects.equals(x.getName(), accountName));
+
+        if (notUnique) {
+
+            throw new UseException(Activity.CREATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
+        }
+
+        return account;
+    }
+
+    public Account handleChangeAccount (Account account, String userId) throws UseException {
+        if (!account.getOwner().getId().equals(userId)){
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_OWNER);
+
+        }
+        if (!account.isActive()) {
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_ACTIVE);
+        }
+
+        return account;
+    }
+
+    public void handleChangeAccountName (String name, Account account, AccountsRepository accountsRepository) throws UseException {
+        if (Objects.equals(name, account.getName())) {
+            System.out.println("E du dum eller..?");
+        } else if (accountsRepository.all()
+                .anyMatch(x -> Objects.equals(x.getName(), name))) {
+            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
+        } else {
+            account.setName(name);
+            accountsRepository.save(account);
+        }
     }
 
     public Account handleAddUserToAccount (Account account, User otherUser, String userId, String userIdToBeAssigned) throws UseException {

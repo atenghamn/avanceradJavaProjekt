@@ -3,7 +3,7 @@ package se.sensera.banking.impl;
 import se.sensera.banking.*;
 import java.util.stream.Stream;
 
-public class FindUsersFacade {
+public class FindAccountsFacade {
     // Första metoden hämtar alla konton och lägger dem i variabeln allAccounts
     public Stream<Account> allMatchedAccounts(AccountsRepository accountsRepository, UsersRepository usersRepository, String userId) {
        Stream<Account> allAccounts = accountsRepository.all();
