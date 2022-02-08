@@ -7,6 +7,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.impl.AccountServiceImpl;
+import se.sensera.banking.impl.ExceptionHandlingFacade;
+import se.sensera.banking.impl.FindAccountsFacade;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -40,7 +42,8 @@ public class AccountServiceFindTest {
 
     UsersRepository usersRepository;
     AccountsRepository accountsRepository;
-
+    ExceptionHandlingFacade exceptionHandlingFacade = new ExceptionHandlingFacade();
+    FindAccountsFacade findAccountsFacade = new FindAccountsFacade();
 
     @BeforeEach
     void setUp() {
@@ -48,7 +51,7 @@ public class AccountServiceFindTest {
         usersRepository = mock(UsersRepository.class);
         accountsRepository = mock(AccountsRepository.class);
 
-        accountService = new AccountServiceImpl(usersRepository, accountsRepository); //TODO create Your implementing class here
+        accountService = new AccountServiceImpl(usersRepository, accountsRepository, exceptionHandlingFacade, findAccountsFacade); //TODO create Your implementing class here
 
         Stream.of(LISA,ARNE,GULLBRITT,BEDA,SVEN)
                 .forEach(user -> when(usersRepository.getEntityById(eq(user.getId()))).thenReturn(Optional.of(user)));

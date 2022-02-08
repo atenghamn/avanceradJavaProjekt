@@ -6,6 +6,8 @@ import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 import se.sensera.banking.impl.AccountServiceImpl;
+import se.sensera.banking.impl.ExceptionHandlingFacade;
+import se.sensera.banking.impl.FindAccountsFacade;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +37,8 @@ public class AccountServiceTest {
     String otherUserId;
     User user;
     User otherUser;
-
+    ExceptionHandlingFacade exceptionHandlingFacade = new ExceptionHandlingFacade();
+    FindAccountsFacade findAccountsFacade = new FindAccountsFacade();
 
     @BeforeEach
     void setUp() {
@@ -44,7 +47,8 @@ public class AccountServiceTest {
         usersRepository = mock(UsersRepository.class);
         accountsRepository = mock(AccountsRepository.class);
 
-        accountService = new AccountServiceImpl(usersRepository, accountsRepository); //TODO create Your implementing class here
+
+        accountService = new AccountServiceImpl(usersRepository, accountsRepository, exceptionHandlingFacade, findAccountsFacade); //TODO create Your implementing class here
 
         user = mock(User.class);
         userId = UUID.randomUUID().toString();

@@ -2,6 +2,7 @@ package se.sensera.banking;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import se.sensera.banking.impl.ExceptionHandlingFacade;
 import se.sensera.banking.impl.UserServiceImpl;
 
 import java.util.List;
@@ -20,6 +21,8 @@ public class UserServiceFindTest {
     UserService userService;
     UsersRepository usersRepository;
 
+    ExceptionHandlingFacade exceptionHandlingFacade = new ExceptionHandlingFacade();
+
     private User arne_gunnarsson;
     private User lisa_gunnarsson;
     private User beda_gunnarsson;
@@ -37,7 +40,7 @@ public class UserServiceFindTest {
         //TODO Måste skickas med som en parameter i UserService constructor
         usersRepository = mock(UsersRepository.class);
 
-        userService = new UserServiceImpl(usersRepository); //TODO create Your implementing class here
+        userService = new UserServiceImpl(usersRepository, exceptionHandlingFacade); //TODO create Your implementing class here
 
         arne_gunnarsson = createUser("Arne Gunnarsson", "20011010-1234", true);
         lisa_gunnarsson = createUser("Lisa  Gunnarsson", "20011010-0234", true);

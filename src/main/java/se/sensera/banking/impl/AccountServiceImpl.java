@@ -49,11 +49,7 @@ public class AccountServiceImpl implements AccountService {
         Account account = getAccount(accountId);
         account = exceptionHandlingFacade.handleChangeAccount(account, userId);
 
-        // Kolla
-        Account finalAccount = account;
-        changeAccountConsumer.accept(name -> {
-            exceptionHandlingFacade.handleChangeAccountName(name, finalAccount, accountsRepository);
-        });
+        exceptionHandlingFacade.handleChangeAccountName(account, accountsRepository, changeAccountConsumer);
 
         return account;
     }

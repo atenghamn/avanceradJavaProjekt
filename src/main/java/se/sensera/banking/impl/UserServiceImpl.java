@@ -16,11 +16,13 @@ import java.util.stream.Stream;
 public class UserServiceImpl implements UserService {
 
     private final UsersRepository usersRepository;
+    ExceptionHandlingFacade exceptionHandlingFacade;
 
-    ExceptionHandlingFacade exceptionHandlingFacade = new ExceptionHandlingFacade();
 
-    public UserServiceImpl(UsersRepository usersRepository) {
+    public UserServiceImpl(UsersRepository usersRepository, ExceptionHandlingFacade exceptionHandlingFacade) {
         this.usersRepository = usersRepository;
+        this.exceptionHandlingFacade = exceptionHandlingFacade;
+
     }
 
     @Override

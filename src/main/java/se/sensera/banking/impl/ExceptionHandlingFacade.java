@@ -1,14 +1,12 @@
 package se.sensera.banking.impl;
 
-import se.sensera.banking.Account;
-import se.sensera.banking.AccountsRepository;
-import se.sensera.banking.User;
-import se.sensera.banking.UsersRepository;
+import se.sensera.banking.*;
 import se.sensera.banking.exceptions.Activity;
 import se.sensera.banking.exceptions.UseException;
 import se.sensera.banking.exceptions.UseExceptionType;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Stream;;
 
 public class ExceptionHandlingFacade {
@@ -55,16 +53,20 @@ public class ExceptionHandlingFacade {
         return account;
     }
 
-    public void handleChangeAccountName (String name, Account account, AccountsRepository accountsRepository) throws UseException {
-        if (Objects.equals(name, account.getName())) {
-            System.out.println("E du dum eller..?");
-        } else if (accountsRepository.all()
-                .anyMatch(x -> Objects.equals(x.getName(), name))) {
-            throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
-        } else {
-            account.setName(name);
-            accountsRepository.save(account);
-        }
+    public void handleChangeAccountName (Account account, AccountsRepository accountsRepository, Consumer<AccountService.ChangeAccount> changeAccountConsumer) throws UseException {
+
+        changeAccountConsumer.accept(name -> {
+            if (Objects.equals(name, account.getName())) {
+                System.out.println("E du dum eller..?");
+            } else if (accountsRepository.all()
+                    .anyMatch(x -> Objects.equals(x.getName(), name))) {
+                throw new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.ACCOUNT_NAME_NOT_UNIQUE);
+            } else {
+                account.setName(name);
+                accountsRepository.save(account);
+            }
+        });
+
     }
 
     public Account handleAddUserToAccount (Account account, User otherUser, String userId, String userIdToBeAssigned) throws UseException {
