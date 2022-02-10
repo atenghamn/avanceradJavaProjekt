@@ -9,10 +9,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 public class TransactionServiceImpl implements TransactionService {
 
+    static AtomicLong globalDuration = new AtomicLong();
     UsersRepository usersRepository;
     AccountsRepository accountsRepository;
     TransactionsRepository transactionsRepository;
@@ -26,6 +28,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction createTransaction(String created, String userId, String accountId, double amount) throws UseException {
+        long start = System.currentTimeMillis();
         User user = usersRepository.getEntityById(userId).orElseThrow();
         Account account = accountsRepository.getEntityById(accountId).orElseThrow();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -44,7 +47,11 @@ public class TransactionServiceImpl implements TransactionService {
         try {
             Date date = dateFormatter.parse(created);
             TransactionImpl transaction = new TransactionImpl(date, user, account, amount);
-            monitor.accept(transaction);
+            new Thread(() -> {
+                monitor.accept(transaction);
+            }).start();
+            long duration = System.currentTimeMillis() - start;
+            globalDuration.addAndGet(duration);
             return transactionsRepository.save(transaction);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
@@ -82,9 +89,3 @@ public class TransactionServiceImpl implements TransactionService {
         this.monitor = monitor;
     }
 }
-
-
-// TODO
-/*      Atomic Long, som static som kan summera
-*
-* */
