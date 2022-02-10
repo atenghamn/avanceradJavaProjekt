@@ -24,7 +24,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account createAccount(String userId, String accountName) throws UseException {
-
         User user = getUser(userId);
         AccountImpl account = new AccountImpl(accountName, user, true);
         account = exceptionHandlingFacade.handlecreateAccount(account, accountsRepository, accountName, user);
@@ -50,7 +49,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account addUserToAccount(String userId, String accountId, String userIdToBeAssigned) throws UseException {
-
         Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_FOUND));
         User otherUser = getUser(userIdToBeAssigned);
         account = exceptionHandlingFacade.handleAddUserToAccount(account, otherUser, userId, userIdToBeAssigned);
@@ -59,7 +57,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account removeUserFromAccount(String userId, String accountId, String userIdToBeAssigned) throws UseException {
-
         Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.UPDATE_ACCOUNT, UseExceptionType.NOT_FOUND));
         User otherUser = usersRepository.getEntityById(userIdToBeAssigned).orElseThrow();
         account = exceptionHandlingFacade.handleRemoveUserFromAccount(userId, account, userIdToBeAssigned);
@@ -72,17 +69,29 @@ public class AccountServiceImpl implements AccountService {
         User user = usersRepository.getEntityById(userId).orElseThrow(() -> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.USER_NOT_FOUND));
         Account account = accountsRepository.getEntityById(accountId).orElseThrow(() -> new UseException(Activity.INACTIVATE_ACCOUNT, UseExceptionType.NOT_FOUND));
         account = exceptionHandlingFacade.handleInactivateAccount(account, user);
-
         return accountsRepository.save(account);
     }
-
     @Override
-    public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
+    public Stream<Account> findAccounts(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) throws UseException {
+        Stream<Account> all = accountsRepository.all();
+
+        if(searchValue != null && !searchValue.isEmpty())
+            all = all.filter(x -> x.getName().toLowerCase().contains(searchValue));
+        if(userId != null)
+            all = all.filter(findAccountsFacade.selectOwnerOrUser(getUser(userId)));
+        if(sortOrder.equals(SortOrder.AccountName))
+            all = all.sorted(Comparator.comparing(Account::getName));
+
+        return ListUtils.applyPage(all, pageNumber, pageSize);
+
+    }
+    /*@Override
+    public Stream<Account> findAccounts2(String searchValue, String userId, Integer pageNumber, Integer pageSize, SortOrder sortOrder) {
         if (userId != null || pageSize != null) {
             return finderTwo(userId, pageNumber, pageSize);
         }
         return finderOne(searchValue, pageSize, sortOrder);
-    }
+    }*/
 
     private Stream<Account> finderOne(String searchValue, Integer pageSize, SortOrder sortOrder) {
         if (!searchValue.equals("")) {
